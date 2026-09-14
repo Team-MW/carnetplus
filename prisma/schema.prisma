@@ -1,0 +1,202 @@
+// Schéma de référence Carnet+ — reprend exactement le modèle de données
+// défini dans le dossier de spécifications fonctionnelles.
+// Non connecté à une base réelle dans cette version (voir src/lib/mock-data.ts) :
+// à activer avec `npx prisma migrate dev` une fois DATABASE_URL renseignée.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleUtilisateur {
+  PARTICULIER
+  GARAGE
+}
+
+enum TypeIntervention {
+  VIDANGE
+  PLAQUETTES_FREIN
+  LIQUIDE_FREIN
+  DISTRIBUTION
+  PNEUS
+  BATTERIE
+  AUTRE
+}
+
+enum SourceIntervalle {
+  CONSTRUCTEUR_PRECIS
+  GENERIQUE_DEFAUT
+}
+
+enum StatutButee {
+  OK
+  BIENTOT_DU
+  DEPASSE
+}
+
+enum TypeAutorisation {
+  PERMANENTE
+  PONCTUELLE
+}
+
+enum StatutDevis {
+  BROUILLON
+  VALIDE_GARAGE
+  ENVOYE_CLIENT
+  ACCEPTE
+  REFUSE
+}
+
+enum StatutLigneFacture {
+  VALIDEE
+  A_CORRIGER
+}
+
+model Utilisateur {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  nom               String
+  role              RoleUtilisateur
+  garage            Garage?
+  vehicules         Vehicule[]        @relation("Proprietaire")
+  autorisationsDonnees AutorisationAcces[] @relation("OctroyeePar")
+  journalAcces      JournalAcces[]
+  createdAt         DateTime          @default(now())
+}
+
+model Garage {
+  id              String        @id @default(cuid())
+  utilisateurId   String        @unique
+  utilisateur     Utilisateur   @relation(fields: [utilisateurId], references: [id])
+  nom             String
+  siret           String?
+  tauxHoraireHT   Float         @default(60)
+  badgeVerifie    Boolean       @default(false)
+  vehiculesTitulaire Vehicule[] @relation("GarageTitulaire")
+  interventions   Intervention[]
+  autorisations   AutorisationAcces[]
+  devis           Devis[]
+  createdAt       DateTime      @default(now())
+}
+
+model Vehicule {
+  id                        String        @id @default(cuid())
+  vin                       String        @unique
+  immatriculation           String
+  numeroFormule             String?
+  marque                    String
+  modele                    String
+  motorisation              String?
+  dateMiseCirculation       DateTime?
+  kilometrageCourant        Int           @default(0)
+  typeVehicule              String        @default("automobile") // automobile | moto | poids_lourd | autocar
+  proprietaireId            String
+  proprietaire              Utilisateur   @relation("Proprietaire", fields: [proprietaireId], references: [id])
+  garageTitulaireId         String?
+  garageTitulaire           Garage?       @relation("GarageTitulaire", fields: [garageTitulaireId], references: [id])
+  statutAssuranceFva        String?       // "assure" | "non_assure" | "inconnu"
+  dateProchainCT            DateTime?
+  butees                    ButeeEntretien[]
+  interventions             Intervention[]
+  autorisations             AutorisationAcces[]
+  devis                     Devis[]
+  createdAt                 DateTime      @default(now())
+}
+
+model ButeeEntretien {
+  id                        String            @id @default(cuid())
+  vehiculeId                String
+  vehicule                  Vehicule          @relation(fields: [vehiculeId], references: [id])
+  typeIntervention          TypeIntervention
+  dateDerniereIntervention  DateTime
+  kmDerniereIntervention    Int
+  intervalleMoisDefaut      Int
+  intervalleKmDefaut        Int
+  sourceIntervalle          SourceIntervalle  @default(GENERIQUE_DEFAUT)
+  // butee_date et butee_km sont calculées par la logique métier
+  // (voir src/lib/business-rules.ts) plutôt que stockées en dur,
+  // pour rester cohérentes si le kilométrage réel change.
+}
+
+model Intervention {
+  id                String          @id @default(cuid())
+  vehiculeId        String
+  vehicule          Vehicule        @relation(fields: [vehiculeId], references: [id])
+  garageId          String
+  garage            Garage          @relation(fields: [garageId], references: [id])
+  date              DateTime
+  kilometrage       Int
+  typeIntervention  TypeIntervention
+  factureSourceUrl  String?
+  lignesFacture     LigneFacture[]
+  dossierTravaux    DossierTravaux?
+  createdAt         DateTime        @default(now())
+}
+
+model LigneFacture {
+  id              String              @id @default(cuid())
+  interventionId  String
+  intervention    Intervention        @relation(fields: [interventionId], references: [id])
+  libelle         String
+  montantHT       Float
+  statut          StatutLigneFacture  @default(A_CORRIGER)
+}
+
+model DossierTravaux {
+  id                        String        @id @default(cuid())
+  interventionId            String        @unique
+  intervention              Intervention  @relation(fields: [interventionId], references: [id])
+  photoEtiquetteUrl         String
+  photoPieceNeuveUrl        String
+  photoPieceInstalleeUrl    String
+  photoPieceUsageeUrl       String
+  horodatageServeur         DateTime      @default(now())
+  geoLat                    Float?
+  geoLng                    Float?
+  hashEtiquette             String
+  hashPieceNeuve            String
+  hashPieceInstallee        String
+  hashPieceUsagee           String
+  commentaireIa             String?
+}
+
+model AutorisationAcces {
+  id              String            @id @default(cuid())
+  vehiculeId      String
+  vehicule        Vehicule          @relation(fields: [vehiculeId], references: [id])
+  garageId        String
+  garage          Garage            @relation(fields: [garageId], references: [id])
+  type            TypeAutorisation
+  dateOctroi      DateTime          @default(now())
+  dateRevocation  DateTime?
+  octroyeeParId   String
+  octroyeePar     Utilisateur       @relation("OctroyeePar", fields: [octroyeeParId], references: [id])
+}
+
+model Devis {
+  id                    String      @id @default(cuid())
+  vehiculeId            String
+  vehicule              Vehicule    @relation(fields: [vehiculeId], references: [id])
+  garageId              String
+  garage                Garage      @relation(fields: [garageId], references: [id])
+  buteeDeclenchanteType TypeIntervention
+  lignes                Json
+  totalHT               Float
+  totalTTC              Float
+  statut                StatutDevis @default(BROUILLON)
+  dateEnvoi             DateTime?
+  createdAt             DateTime    @default(now())
+}
+
+model JournalAcces {
+  id              String      @id @default(cuid())
+  utilisateurId   String
+  utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id])
+  action          String      // "lecture" | "ecriture" | "revocation" | "octroi"
+  cible           String      // ex. "vehicule:xxxx"
+  createdAt       DateTime    @default(now())
+}
