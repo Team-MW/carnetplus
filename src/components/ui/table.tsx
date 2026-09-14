@@ -24,10 +24,22 @@ export function TR({ children, className, onClick }: { children: React.ReactNode
   );
 }
 
-export function TH({ children, className }: { children: React.ReactNode; className?: string }) {
+export function TH({ children, className }: { children?: React.ReactNode; className?: string }) {
   return <th className={cn("px-4 py-3 font-medium", className)}>{children}</th>;
 }
 
-export function TD({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={cn("px-4 py-3", className)}>{children}</td>;
+export function TD({
+  children,
+  className,
+  colSpan,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+  colSpan?: number;
+}) {
+  return (
+    <td colSpan={colSpan} className={cn("px-4 py-3", className)}>
+      {children}
+    </td>
+  );
 }

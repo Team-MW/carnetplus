@@ -9,7 +9,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Not connected in this MVP (mock data). Real deployments can override via DATABASE_URL
+  // by switching this back to env("DATABASE_URL").
+  url      = "postgresql://user:password@localhost:5432/carnetplus"
 }
 
 enum RoleUtilisateur {

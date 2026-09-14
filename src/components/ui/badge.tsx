@@ -37,9 +37,12 @@ export function StatutButeeBadge({ statut }: { statut: StatutButee }) {
 }
 
 export function StatutDevisBadge({ statut }: { statut: StatutDevis }) {
-  const map: Record<StatutDevis, { label: string; variant: "neutral" | "success" | "warning" | "danger" }> = {
+  const map: Record<
+    StatutDevis,
+    { label: string; variant: "neutral" | "success" | "warning" | "danger" | "accent" }
+  > = {
     BROUILLON: { label: "brouillon", variant: "neutral" },
-    VALIDE_GARAGE: { label: "validé", variant: "accent" as any },
+    VALIDE_GARAGE: { label: "validé", variant: "accent" },
     ENVOYE_CLIENT: { label: "envoyé au client", variant: "warning" },
     ACCEPTE: { label: "accepté", variant: "success" },
     REFUSE: { label: "refusé", variant: "danger" },

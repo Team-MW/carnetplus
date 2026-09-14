@@ -55,7 +55,7 @@ export default function DevisGaragePage() {
             })}
             {devis.length === 0 && (
               <TR>
-                <TD className="text-muted-foreground" colSpan={6 as any}>
+                <TD className="text-muted-foreground" colSpan={6}>
                   Aucun devis pour le moment.
                 </TD>
               </TR>
