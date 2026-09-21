@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge, StatutButeeBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RecherchePlaqueSiv } from "@/components/vehicules/recherche-plaque-siv";
 import { formatKm } from "@/lib/utils";
 import { getUtilisateurCourant, getVehiculesDuProprietaire, getButeesDuVehicule } from "@/lib/data/repository";
 import { Car, Bike, Plus } from "lucide-react";
@@ -19,8 +18,6 @@ export default function VehiculesPage() {
           <Plus size={16} /> Ajouter un véhicule
         </Button>
       </div>
-
-      <RecherchePlaqueSiv />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {vehicules.map((v) => {

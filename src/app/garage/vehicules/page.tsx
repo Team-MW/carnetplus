@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { StatutButeeBadge, Badge } from "@/components/ui/badge";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
+import { RecherchePlaqueSiv } from "@/components/vehicules/recherche-plaque-siv";
 import { formatKm } from "@/lib/utils";
 import { getGarageCourant, getVehiculesAccessiblesParGarage, getButeesDuVehicule, getGarageTitulaireActuel } from "@/lib/data/repository";
 
@@ -17,6 +18,8 @@ export default function VehiculesGaragePage() {
           Véhicules pour lesquels vous avez une autorisation d'accès active.
         </p>
       </div>
+
+      <RecherchePlaqueSiv />
 
       <Card>
         <Table>
